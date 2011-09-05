@@ -3,19 +3,31 @@
  */
 package org.jboss.seam.scopes.clustered;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.util.Set;
 
+import javax.enterprise.inject.Any;
+import javax.enterprise.inject.Default;
+import javax.enterprise.inject.spi.Annotated;
+import javax.enterprise.inject.spi.AnnotatedType;
+import javax.enterprise.inject.spi.Bean;
+import javax.enterprise.inject.spi.BeanManager;
+import javax.inject.Inject;
+import javax.inject.Qualifier;
 import javax.interceptor.AroundInvoke;
 import javax.interceptor.Interceptor;
 import javax.interceptor.InvocationContext;
 
 import org.infinispan.Cache;
+import org.jboss.weld.bean.ManagedBean;
 
 
 /**
  * @author <a href="mailto:matejonnet@gmail.com">Matej Lazar</a>
  */
-@ClusteredSingletonInt
+@ClusteredSingletonInterceptor
 @Interceptor
 public class ClusteredScopeInterceptor {
 
@@ -27,20 +39,34 @@ public class ClusteredScopeInterceptor {
         return result;
     }
 
+   @Inject
+   BeanManager beanManager;
+
     /**
-     * @param ctx
-     *
+     * push new bean state to cache
      */
     private void pushToCache(InvocationContext ctx) {
         Object o = ctx.getTarget();
+        Method m = ctx.getMethod();
+        ClusteredSingletonContext context = (ClusteredSingletonContext)beanManager.getContext(ClusteredSingleton.class);
 
-        Field[] fields = o.getClass().getFields();
+        Set<Bean<?>> beans = beanManager.getBeans(o.getClass().getSuperclass());
+        for (Bean b : beans) {
+            ManagedBean mb = (ManagedBean)b;
 
-        getCache();
+            context.getBeanStore().refreshCache(mb.getId(), o);
+            System.currentTimeMillis();
+        }
+
+        //context.
+
+
+        //
+//        getCache();
     }
 
-    private Cache<String,Object> getCache() {
-        return CacheFactory.getCache();
-    }
+//    private Cache<String,Object> getCache() {
+//        return CacheFactory.getCache();
+//    }
 
 }

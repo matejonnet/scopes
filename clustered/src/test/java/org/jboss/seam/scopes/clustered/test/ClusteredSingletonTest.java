@@ -8,7 +8,7 @@ import org.infinispan.config.Configuration.CacheMode;
 import org.infinispan.eviction.EvictionStrategy;
 import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.manager.EmbeddedCacheManager;
-import org.jboss.arquillian.api.Deployment;
+import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.seam.scopes.clustered.CacheFactory;
 import org.jboss.seam.scopes.clustered.CacheFactoryLocalProvider;
@@ -42,8 +42,8 @@ public class ClusteredSingletonTest
       JavaArchive archive = ShrinkWrap.create(JavaArchive.class)
             .addPackage(ClusteredSingletonTest.class.getPackage())
             .addPackage(ClusteredSingletonContext.class.getPackage())
-            .addAsResource(EmptyAsset.INSTANCE, "META-INF/beans.xml")
-            .addAsResource(EmptyAsset.INSTANCE, "META-INF/services/javax.enterprise.inject.spi.Extension");
+            .addAsManifestResource("META-INF/beans.xml", "beans.xml")
+            .addAsManifestResource("META-INF/services/javax.enterprise.inject.spi.Extension", "services/javax.enterprise.inject.spi.Extension");
       System.out.println("archive = " + archive.toString(true));
       return archive;
    }
@@ -98,11 +98,19 @@ public class ClusteredSingletonTest
        singletonBean.setField1("string11");
    }
 
-
    @Test
    public void testFirstTest() throws Exception
    {
       Assert.assertNotNull(singletonBean);
       Assert.assertNotNull(singletonBean.getField1());
    }
+
+   @Test
+   public void cacheTest() throws Exception {
+       singletonBean.setField1("a");
+       singletonBean.appendToField1("b");
+       Assert.assertEquals("ab", singletonBean.getField1());
+   }
+
+
 }

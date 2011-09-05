@@ -104,8 +104,8 @@ public class ClusteredSingletonContext extends AbstractContext {
        if (beanInstance != null)
        {
           return beanInstance.getInstance();
-       } else if (getBeanStore().getRemoteInstance(id) != null) {
-           instance = (T) getBeanStore().getRemoteInstance(id);
+       } else if (getBeanStore().getInstanceFromCache(id) != null) {
+           instance = (T) getBeanStore().getInstanceFromCache(id);
        }
 
        if (creationalContext != null)

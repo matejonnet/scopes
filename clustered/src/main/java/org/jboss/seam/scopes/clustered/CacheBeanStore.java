@@ -4,26 +4,17 @@
 package org.jboss.seam.scopes.clustered;
 
 import java.io.Serializable;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Method;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import javax.enterprise.context.spi.CreationalContext;
+import javax.enterprise.inject.spi.Bean;
 
 import org.infinispan.Cache;
 import org.jboss.weld.context.SerializableContextualInstanceImpl;
 import org.jboss.weld.context.api.ContextualInstance;
 import org.jboss.weld.context.beanstore.BeanStore;
 import org.jboss.weld.serialization.spi.helpers.SerializableContextual;
-
-import javassist.util.proxy.MethodFilter;
-import javassist.util.proxy.MethodHandler;
-import javassist.util.proxy.ProxyFactory;
-import javassist.util.proxy.ProxyObject;
 
 /**
  * @author <a href="mailto:matejonnet@gmail.com">Matej Lazar</a>
@@ -39,10 +30,10 @@ public class CacheBeanStore implements BeanStore, Serializable {
         if (ci == null) {
             return null;
         }
-        return new SerializableContextualInstanceImpl((SerializableContextual) ci.getContextual(), getRemoteInstance(key),ci.getCreationalContext());
+        return new SerializableContextualInstanceImpl((SerializableContextual) ci.getContextual(), getInstanceFromCache(key),ci.getCreationalContext());
     }
 
-    public Object getRemoteInstance(String key) {
+    public Object getInstanceFromCache(String key) {
         return getCache().get(key);
     }
 
@@ -54,10 +45,11 @@ public class CacheBeanStore implements BeanStore, Serializable {
         contextualInstancesRegistry.put(id, contextualInstance);
     }
 
-    @SuppressWarnings("unchecked")
-    private void refreshCache(String key, Object value) {
-        //TODO ??
+    public void refreshCache(String id, Object value) {
+        getCache().put(id, value);
     }
+
+
 
     public boolean contains(String key) {
         //TODO reload from cache ?
@@ -88,6 +80,8 @@ public class CacheBeanStore implements BeanStore, Serializable {
         String key = "application_uniqu_id";
         return key;
     }
+
+
 
 
 

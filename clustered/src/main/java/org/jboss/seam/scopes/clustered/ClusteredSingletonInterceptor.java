@@ -20,8 +20,8 @@ import javax.interceptor.InterceptorBinding;
  * @author <a href="mailto:matejonnet@gmail.com">Matej Lazar</a>
  */
 
-@Target( { TYPE, METHOD})
+@Target( { TYPE, METHOD, FIELD })
 @Retention(RUNTIME)
 @InterceptorBinding
-public @interface ClusteredSingletonInt {
+public @interface ClusteredSingletonInterceptor {
 }
