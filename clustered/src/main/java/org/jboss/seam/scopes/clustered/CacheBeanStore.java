@@ -73,10 +73,8 @@ public class CacheBeanStore implements BeanStore, Serializable {
     public Iterator<String> iterator() {
         //return contextualInstances.keySet().iterator();
         for (String key : getCache().keySet()) {
-
+            //TODO filter only this app
         }
-
-
         return getCache().keySet().iterator();
     }
 

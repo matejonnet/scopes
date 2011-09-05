@@ -3,6 +3,8 @@
  */
 package org.jboss.seam.scopes.clustered;
 
+import java.lang.reflect.Field;
+
 import javax.interceptor.AroundInvoke;
 import javax.interceptor.Interceptor;
 import javax.interceptor.InvocationContext;
@@ -13,12 +15,13 @@ import org.infinispan.Cache;
 /**
  * @author <a href="mailto:matejonnet@gmail.com">Matej Lazar</a>
  */
+@ClusteredSingletonInt
 @Interceptor
-@ClusteredSingleton
 public class ClusteredScopeInterceptor {
 
     @AroundInvoke
     public Object updateCache(InvocationContext ctx) throws Exception {
+        System.out.println(">>>>>>> Intercepting bean ... ");
         Object result = ctx.proceed();
         pushToCache(ctx);
         return result;
@@ -30,7 +33,10 @@ public class ClusteredScopeInterceptor {
      */
     private void pushToCache(InvocationContext ctx) {
         Object o = ctx.getTarget();
-        //TODO getCache();
+
+        Field[] fields = o.getClass().getFields();
+
+        getCache();
     }
 
     private Cache<String,Object> getCache() {

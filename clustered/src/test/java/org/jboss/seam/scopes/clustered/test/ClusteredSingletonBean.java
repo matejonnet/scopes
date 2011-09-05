@@ -7,11 +7,14 @@ import javax.enterprise.inject.spi.BeanManager;
 import javax.inject.Inject;
 
 import org.jboss.seam.scopes.clustered.ClusteredSingleton;
+import org.jboss.seam.scopes.clustered.ClusteredSingletonInt;
 
 /**
  * @author <a href="mailto:ales.justin@jboss.org">Ales Justin</a>
  */
-@ClusteredSingleton
+//@ClusteredSingleton
+@ApplicationScoped
+@ClusteredSingletonInt
 public class ClusteredSingletonBean
 {
     private String field1;

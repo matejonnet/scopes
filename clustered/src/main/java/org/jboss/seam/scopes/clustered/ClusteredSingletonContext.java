@@ -42,7 +42,7 @@ import org.jboss.weld.serialization.spi.ContextualStore;
 public class ClusteredSingletonContext extends AbstractContext {
 
     //TODO make context per app (unique_id)
-    private static final String CONTEXT_ACTIVE_FLAG = "_CONTEXT_ACTIVE_FLAG";
+   // private static final String CONTEXT_ACTIVE_FLAG = "_CONTEXT_ACTIVE_FLAG";
     private static ReentrantLock creationLock = new ReentrantLock();
 
     CacheBeanStore beanStore;
@@ -56,7 +56,8 @@ public class ClusteredSingletonContext extends AbstractContext {
     }
 
     public boolean isActive() {
-        return (Boolean)getCache().get(CONTEXT_ACTIVE_FLAG);
+      //  return (Boolean)getCache().get(CONTEXT_ACTIVE_FLAG);
+        return beanStore != null;
     }
 
     @Override
@@ -67,12 +68,13 @@ public class ClusteredSingletonContext extends AbstractContext {
 
     public void activate() {
        beanStore = new CacheBeanStore();
-       setActive(true);
+     //  setActive(true);
     }
 
     public void deactivate() {
-       setActive(false);
        cleanup();
+     //  setActive(false);
+       beanStore=null;
     }
 
     /**
@@ -147,9 +149,9 @@ public class ClusteredSingletonContext extends AbstractContext {
     /**
      * @param b
      */
-    private void setActive(boolean b) {
-        getCache().put(CONTEXT_ACTIVE_FLAG, true);
-    }
+//    private void setActive(boolean b) {
+//        getCache().put(CONTEXT_ACTIVE_FLAG, true);
+//    }
 
 
     /**

@@ -95,6 +95,7 @@ public class ClusteredSingletonTest
    public void test() throws Exception
    {
        singletonBean.setField1("string1");
+       singletonBean.setField1("string11");
    }
 
 
