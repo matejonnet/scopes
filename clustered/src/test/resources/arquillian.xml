@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<arquillian xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jboss.org/schema/arquillian http://jboss.org/schema/arquillian/arquillian_1_0.xsd">
+    <group qualifier="jboss-cluster">
+        <container qualifier="container-A" default="true">
+            <configuration>
+                <property name="jbossHome">d:\\java\\runtimes\\jboss-as-7.1.0.Alpha1-SNAPSHOT\\</property>
+                <property name="serverConfig">standalone-ha.xml</property>
+                <property name="managementAddress">127.0.0.1</property>
+                <property name="managementPort">9999</property>
+            </configuration>
+	        <protocol type="jmx-as7">
+	            <property name="executionType">REMOTE</property>
+	        </protocol>
+        </container>
+        <container qualifier="container-B" default="true">
+            <configuration>
+                <property name="jbossHome">d:\\java\\runtimes\\jboss-as-7.1.0.Alpha1-SNAPSHOT-B\\</property>
+                <property name="serverConfig">standalone-ha.xml</property>
+                <property name="managementAddress">127.0.0.1</property>
+                <property name="managementPort">19999</property>
+            </configuration>
+	        <protocol type="jmx-as7">
+	            <property name="executionType">REMOTE</property>
+	        </protocol>
+        </container>
+    </group>
+</arquillian>

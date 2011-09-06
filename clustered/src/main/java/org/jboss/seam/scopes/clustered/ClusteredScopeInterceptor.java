@@ -3,6 +3,7 @@
  */
 package org.jboss.seam.scopes.clustered;
 
+import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -29,7 +30,10 @@ import org.jboss.weld.bean.ManagedBean;
  */
 @ClusteredSingletonInterceptor
 @Interceptor
-public class ClusteredScopeInterceptor {
+//TODO ? needs to be serializable ??
+public class ClusteredScopeInterceptor implements Serializable {
+
+    private static final long serialVersionUID = -1134835456910673590L;
 
     @AroundInvoke
     public Object updateCache(InvocationContext ctx) throws Exception {

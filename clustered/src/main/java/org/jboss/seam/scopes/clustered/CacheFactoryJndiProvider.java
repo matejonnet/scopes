@@ -29,7 +29,7 @@ public class CacheFactoryJndiProvider implements CacheFactoryProvider {
             return (CacheContainer) new InitialContext().lookup(jndiName);
         } catch (NamingException e) {
             //TODO log event
-            System.err.println("Ha context requires cache java:jboss/infinispan/hacontext");
+            System.err.println("Ha context requires cache [" + jndiName + "]");
             e.printStackTrace();
         }
 

@@ -1,5 +1,6 @@
 package org.jboss.seam.scopes.clustered.test;
 
+import java.io.Serializable;
 import java.util.Map;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -14,8 +15,10 @@ import org.jboss.seam.scopes.clustered.ClusteredSingletonInterceptor;
  */
 @ClusteredSingleton
 @ClusteredSingletonInterceptor
-public class ClusteredSingletonBean
+public class ClusteredSingletonBean implements Serializable
 {
+    private static final long serialVersionUID = -9108312018228233279L;
+
     private String field1;
 
     private Map<String, String> map1;
