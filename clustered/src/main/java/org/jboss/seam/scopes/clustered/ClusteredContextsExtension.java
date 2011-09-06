@@ -27,7 +27,7 @@ public class ClusteredContextsExtension implements Extension {
     public void registerContext(AfterBeanDiscovery event, BeanManager manager) {
         //TODO log
         System.out.println(">>>>> Registering ClusteredContexts ...");
-        ClusteredSingletonContext csc = new ClusteredSingletonContext();
+        ClusteredSingletonContext csc = new ClusteredSingletonContext(manager);
         event.addContext(csc);
         csc.activate();
         //TODO deactivate context on shutdown

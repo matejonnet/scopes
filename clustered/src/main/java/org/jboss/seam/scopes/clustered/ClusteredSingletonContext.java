@@ -10,6 +10,7 @@ import static org.jboss.weld.logging.messages.ContextMessage.CONTEXTUAL_IS_NULL;
 import static org.jboss.weld.logging.messages.ContextMessage.CONTEXT_CLEARED;
 import static org.jboss.weld.logging.messages.ContextMessage.NO_BEAN_STORE_AVAILABLE;
 
+import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -20,18 +21,25 @@ import javax.enterprise.context.spi.Contextual;
 import javax.enterprise.context.spi.CreationalContext;
 import javax.enterprise.event.Observes;
 import javax.enterprise.inject.spi.AfterBeanDiscovery;
+import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.BeanManager;
+import javax.inject.Inject;
+import javax.inject.Singleton;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
 import org.infinispan.Cache;
+import org.infinispan.commands.read.GetKeyValueCommand;
 import org.infinispan.manager.CacheContainer;
+import org.jboss.seam.scopes.common.LookupContext;
+import org.jboss.weld.Container;
+import org.jboss.weld.bean.ManagedBean;
+import org.jboss.weld.bootstrap.api.ServiceRegistry;
 import org.jboss.weld.context.AbstractContext;
 import org.jboss.weld.context.SerializableContextualInstanceImpl;
 import org.jboss.weld.context.api.ContextualInstance;
 import org.jboss.weld.context.beanstore.BeanStore;
 import org.jboss.weld.context.beanstore.HashMapBeanStore;
-import org.jboss.weld.exceptions.IllegalArgumentException;
 import org.jboss.weld.exceptions.IllegalStateException;
 import org.jboss.weld.serialization.spi.ContextualStore;
 
@@ -39,120 +47,90 @@ import org.jboss.weld.serialization.spi.ContextualStore;
 /**
  * @author <a href="mailto:matejonnet@gmail.com">Matej Lazar</a>
  */
-public class ClusteredSingletonContext extends AbstractContext {
+@Singleton
+public class ClusteredSingletonContext implements Context {
 
-    //TODO make context per app (unique_id)
-   // private static final String CONTEXT_ACTIVE_FLAG = "_CONTEXT_ACTIVE_FLAG";
-    private static ReentrantLock creationLock = new ReentrantLock();
+    BeanManager beanManager;
+    private CacheBeanStore beanStore;
+//    private ServiceRegistry serviceRegistry;
 
-    CacheBeanStore beanStore;
 
-    public ClusteredSingletonContext() {
-       super(false);
+
+        @Inject
+        public ClusteredSingletonContext(BeanManager manager) {
+            this.beanManager = manager;
+//            this.serviceRegistry = Container.instance().services();
+            activate();
+       }
+
+
+
+    /* (non-Javadoc)
+     * @see javax.enterprise.context.spi.Context#get(javax.enterprise.context.spi.Contextual)
+     */
+    public <T> T get(Contextual<T> contextual) {
+        return get(contextual, null);
     }
+
+    public <T> T get(Contextual<T> contextual, CreationalContext<T> creationalContext) {
+        if (contextual == null) {
+            throw new org.jboss.weld.exceptions.IllegalArgumentException(CONTEXTUAL_IS_NULL);
+        }
+//        if (!(contextual instanceof Bean<?>)) {
+//            throw new IllegalArgumentException("Can only handle beans: " + contextual);
+//        }
+//      if (!(contextual instanceof Serializable)) {
+//      throw new IllegalArgumentException("Can only handle serializable beans: " + contextual);
+//  }
+        if (getBeanStore() == null) {
+            return null;
+        }
+
+      //  Bean<T> bean = (Bean<T>) contextual;
+        String id = getId(contextual);
+
+        ContextualInstance<T> beanInstance = getBeanStore().get(id);
+        if (beanInstance != null) {
+            return beanInstance.getInstance();
+        } else if (creationalContext != null) {
+
+            T instance = contextual.create(creationalContext);
+            if (instance != null) {
+                //beanInstance = new SerializableContextualInstanceImpl<Contextual<T>, T>(contextual, instance, creationalContext, serviceRegistry.get(ContextualStore.class));
+                getBeanStore().put(id, instance);
+            }
+            return instance;
+        }
+        return null;
+    }
+
+    //@Override
+    protected String getId(Contextual<?> contextual) {
+        //TODO implement key generation
+        return contextual.getClass().toString();
+    }
+
 
     public Class<? extends Annotation> getScope() {
         return ClusteredSingleton.class;
     }
 
     public boolean isActive() {
-      //  return (Boolean)getCache().get(CONTEXT_ACTIVE_FLAG);
         return beanStore != null;
     }
 
-    @Override
     protected CacheBeanStore getBeanStore() {
-        //TODO verify beanStore scope it must be application scoped
         return beanStore;
     }
 
     public void activate() {
-       beanStore = new CacheBeanStore();
-     //  setActive(true);
+        beanStore = new CacheBeanStore();
     }
 
     public void deactivate() {
-       cleanup();
-     //  setActive(false);
-       beanStore=null;
+        cleanup();
+        beanStore=null;
     }
-
-    /**
-     * @see org.jboss.weld.context.AbstractContext#get(Contextual, CreationalContext)
-     */
-    //@SuppressWarnings(value="UL_UNRELEASED_LOCK", justification="False positive from FindBugs")
-    @Override
-    public <T> T get(Contextual<T> contextual, CreationalContext<T> creationalContext)
-    {
-       boolean multithreaded = false;
-
-       if (!isActive())
-       {
-          throw new ContextNotActiveException();
-       }
-       if (getBeanStore() == null)
-       {
-          return null;
-       }
-       if (contextual == null)
-       {
-          throw new IllegalArgumentException(CONTEXTUAL_IS_NULL);
-       }
-       String id = getId(contextual);
-       T instance = null;
-       ContextualInstance<T> beanInstance = getBeanStore().get(id);
-       if (beanInstance != null)
-       {
-          return beanInstance.getInstance();
-       } else if (getBeanStore().getInstanceFromCache(id) != null) {
-           instance = (T) getBeanStore().getInstanceFromCache(id);
-       }
-
-       if (creationalContext != null)
-       {
-          try
-          {
-             if (multithreaded)
-             {
-                creationLock.lock();
-                beanInstance = getBeanStore().get(id);
-                if (beanInstance != null)
-                {
-                   return beanInstance.getInstance();
-                }
-             }
-             if (instance == null) {
-                 instance = contextual.create(creationalContext);
-             }
-             if (instance != null)
-             {
-                beanInstance = new SerializableContextualInstanceImpl<Contextual<T>, T>(contextual, instance, creationalContext, getServiceRegistry().get(ContextualStore.class));
-                getBeanStore().put(id, beanInstance);
-             }
-             return instance;
-          }
-          finally
-          {
-             if (multithreaded)
-             {
-                creationLock.unlock();
-             }
-          }
-       }
-       else
-       {
-          return null;
-       }
-    }
-
-
-    /**
-     * @param b
-     */
-//    private void setActive(boolean b) {
-//        getCache().put(CONTEXT_ACTIVE_FLAG, true);
-//    }
-
 
     /**
      * @return
@@ -160,6 +138,13 @@ public class ClusteredSingletonContext extends AbstractContext {
     private Cache<String,Object> getCache() {
         return CacheFactory.getCache();
     }
+
+    public void cleanup() {
+        if (getBeanStore() != null) {
+            getBeanStore().clear();
+        }
+    }
+
 
 
 }

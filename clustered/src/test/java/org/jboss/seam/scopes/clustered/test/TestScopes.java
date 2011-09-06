@@ -33,15 +33,14 @@ import static org.junit.Assert.*;
  * @author <a href="mailto:ales.justin@jboss.org">Ales Justin</a>
  */
 @RunWith(Arquillian.class)
-public class ClusteredSingletonTest
+public class TestScopes
 {
 
    @Deployment (name = "dep1") @TargetsContainer("container-A")
    public static Archive myApp() {
-      //CacheFactory.init(new CacheFactoryLocalProvider(startInfinispan()));
 
       JavaArchive archive = ShrinkWrap.create(JavaArchive.class)
-            .addPackage(ClusteredSingletonTest.class.getPackage())
+            .addPackage(TestScopes.class.getPackage())
             .addPackage(ClusteredSingletonContext.class.getPackage())
             .addAsManifestResource("META-INF/beans.xml", "beans.xml")
             .addAsManifestResource("META-INF/jboss-deployment-structure.xml", "jboss-deployment-structure.xml")
@@ -50,52 +49,33 @@ public class ClusteredSingletonTest
       return archive;
    }
 
-   @Deployment (name = "dep2") @TargetsContainer("container-B")
-   public static Archive myApp2() {
-       //CacheFactory.init(new CacheFactoryLocalProvider(startInfinispan()));
-
-       JavaArchive archive = ShrinkWrap.create(JavaArchive.class)
-               .addPackage(ClusteredSingletonTest.class.getPackage())
-               .addPackage(ClusteredSingletonContext.class.getPackage())
-               .addAsManifestResource("META-INF/beans.xml", "beans.xml")
-               .addAsManifestResource("META-INF/jboss-deployment-structure.xml", "jboss-deployment-structure.xml")
-               .addAsManifestResource("META-INF/services/javax.enterprise.inject.spi.Extension", "services/javax.enterprise.inject.spi.Extension");
-       System.out.println("archive = " + archive.toString(true));
-       return archive;
-   }
-
-   @Before
-   public void init() {
-       CacheFactory.init(new CacheFactoryJndiProvider("java:jboss/infinispan/demo"));
-   }
-
    @Inject
-   ClusteredSingletonBean singletonBean;
+   SessionScopedBean sessionScopedBean;
 
    @Test @OperateOnDeployment("dep1")
    public void testStep1() throws Exception
    {
-       singletonBean.setField1("string1");
-   }
-
-   @Test @OperateOnDeployment("dep2")
-   public void testStep2() throws Exception
-   {
-      Assert.assertNotNull(singletonBean);
-      Assert.assertEquals("string1", singletonBean.getField1());
-      singletonBean.setField1("string2");
+       sessionScopedBean.setField1("str1");
    }
 
    @Test @OperateOnDeployment("dep1")
-   public void testStep3() throws Exception {
-       Assert.assertEquals("string2", singletonBean.getField1());
-       singletonBean.appendToField1("-add");
+   public void testStep2() throws Exception
+   {
+       sessionScopedBean.setField1("str2");
    }
-
-   @Test @OperateOnDeployment("dep2")
-   public void testStep4() throws Exception {
-      Assert.assertEquals("string2-add", singletonBean.getField1());
-   }
-
+//   @Inject
+//   ApplicationScopedBean applicationScopedBean;
+//
+//   @Test @OperateOnDeployment("dep1")
+//   public void testStep1() throws Exception
+//   {
+//       applicationScopedBean.setField1("str1");
+//   }
+//
+//   @Test @OperateOnDeployment("dep1")
+//   public void testStep2() throws Exception
+//   {
+//       applicationScopedBean.setField1("str2");
+//   }
 
 }

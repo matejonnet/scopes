@@ -25,6 +25,5 @@ import javax.interceptor.InterceptorBinding;
 @Documented
 @NormalScope
 @Inherited
-@InterceptorBinding
 public @interface ClusteredSingleton {
 }
