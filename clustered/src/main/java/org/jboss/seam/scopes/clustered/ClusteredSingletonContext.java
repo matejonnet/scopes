@@ -52,14 +52,14 @@ public class ClusteredSingletonContext implements Context {
 
     BeanManager beanManager;
     private CacheBeanStore beanStore;
-//    private ServiceRegistry serviceRegistry;
+    private ServiceRegistry serviceRegistry;
 
 
 
         @Inject
         public ClusteredSingletonContext(BeanManager manager) {
             this.beanManager = manager;
-//            this.serviceRegistry = Container.instance().services();
+            this.serviceRegistry = Container.instance().services();
             activate();
        }
 
@@ -86,20 +86,25 @@ public class ClusteredSingletonContext implements Context {
             return null;
         }
 
-      //  Bean<T> bean = (Bean<T>) contextual;
+        Bean<T> bean = (Bean<T>) contextual;
         String id = getId(contextual);
 
-        ContextualInstance<T> beanInstance = getBeanStore().get(id);
-        if (beanInstance != null) {
-            return beanInstance.getInstance();
+//        ContextualInstance<T> beanInstance = getBeanStore().get(id);
+//        if (beanInstance != null) {
+//            return beanInstance.getInstance();
+        T instance = (T) getBeanStore().get(id);
+        if (instance != null) {
+            return instance;
+
         } else if (creationalContext != null) {
 
-            T instance = contextual.create(creationalContext);
-            if (instance != null) {
-                //beanInstance = new SerializableContextualInstanceImpl<Contextual<T>, T>(contextual, instance, creationalContext, serviceRegistry.get(ContextualStore.class));
-                getBeanStore().put(id, instance);
+            T newInstance = contextual.create(creationalContext);
+            if (newInstance != null) {
+//                beanInstance = new SerializableContextualInstanceImpl<Contextual<T>, T>(contextual, instance, creationalContext, serviceRegistry.get(ContextualStore.class));
+//                getBeanStore().put(id, beanInstance);
+              getBeanStore().put(id, newInstance);
             }
-            return instance;
+            return newInstance;
         }
         return null;
     }

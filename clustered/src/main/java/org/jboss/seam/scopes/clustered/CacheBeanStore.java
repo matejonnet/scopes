@@ -23,8 +23,16 @@ public class CacheBeanStore {
 
     private static final long serialVersionUID = -4244132750844284678L;
 
-    public <T> ContextualInstance<T> get(String key) {
-        return null;
+    Map<String, Object> proxyStore = new HashMap<String, Object>();
+
+//    public <T> ContextualInstance<T> get(String key) {
+//        return (ContextualInstance<T>) getCache().get(key);
+//    }
+//    public <T> T get(String key) {
+//        return (T) getCache().get(key);
+//    }
+    public Object get(String key) {
+        return getCache().get(key);
     }
 
     @SuppressWarnings("unchecked")
@@ -60,15 +68,10 @@ public class CacheBeanStore {
         return CacheFactory.getCache();
     }
 
-
     private String getAppUniqueId() {
         //TODO provide application unique id
         String key = "application_uniqu_id";
         return key;
     }
-
-
-
-
 
 }
